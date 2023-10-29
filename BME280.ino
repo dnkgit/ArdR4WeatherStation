@@ -74,7 +74,7 @@ BME280I2C::Settings settings(
 
 BME280I2C bme(settings);
 
-void Init_BME280 (void)
+void BME280_Init(void)
 {
   Wire.begin();
   while(!bme.begin())
@@ -95,35 +95,38 @@ void Init_BME280 (void)
   }
 }
 
-void printBME280Data(Stream* client, WeatherData_t* WD_s)
+void BME280_UpdateData(WeatherData_t* WD_s)
 {
-   float temp(NAN), hum(NAN), pres(NAN);
+  float temp(NAN), hum(NAN), pres(NAN);
 
-   BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
-   BME280::PresUnit presUnit(BME280::PresUnit_hPa);
+  BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+  BME280::PresUnit presUnit(BME280::PresUnit_hPa);
 
-   bme.read(pres, temp, hum, tempUnit, presUnit);
+  bme.read(pres, temp, hum, tempUnit, presUnit);
 
   WD_s->TemperatureDegC_f = temp;
   WD_s->Humidity_PC_f = hum;
   WD_s->Pressure_hPa_f = pres;
+}
 
+void BME280_PrintToSerial(Stream* client, WeatherData_t* WD_s)
+{
 #if 1
-   client->print(temp);
+   client->print(WD_s->TemperatureDegC_f);
    client->print(",");
-   client->print(hum);
+   client->print(WD_s->Humidity_PC_f);
    client->print(",");
-   client->print(pres);
+   client->print(WD_s->Pressure_hPa_f);
    client->println("");
 #else
    client->print("Temp: ");
-   client->print(temp);
+   client->print(WD_s->TemperatureDegC_f);
    client->print("°"+ String(tempUnit == BME280::TempUnit_Celsius ? 'C' :'F'));
    client->print("\tHumidity: ");
-   client->print(hum);
+   client->print(WD_s->Humidity_PC_f);
    client->print("% RH");
    client->print("\tPressure: ");
-   client->print(pres);
+   client->print(WD_s->Pressure_hPa_f);
    client->println("hPa");
 #endif
 }
