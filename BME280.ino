@@ -79,19 +79,28 @@ void BME280_Init(void)
   Wire.begin();
   while(!bme.begin())
   {
+#ifdef BME_DEBUG_PRINTS
     Serial.println("Could not find BME280I2C sensor!");
+#endif
     delay(1000);
   }
   switch(bme.chipModel())
   {
      case BME280::ChipModel_BME280:
+#ifdef BME_DEBUG_PRINTS
        Serial.println("Found BME280 sensor! Success.");
+#endif
        break;
      case BME280::ChipModel_BMP280:
+#ifdef BME_DEBUG_PRINTS
        Serial.println("Found BMP280 sensor! No Humidity available.");
+#endif
        break;
      default:
+#ifdef BME_DEBUG_PRINTS
        Serial.println("Found UNKNOWN sensor! Error!");
+#endif
+        break;
   }
 }
 

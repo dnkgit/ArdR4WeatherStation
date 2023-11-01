@@ -122,6 +122,7 @@ void printWifiStatus (void)
 {
   IPAddress ip = WiFi.localIP();
   long rssi = WiFi.RSSI();
+#ifdef WIFI_DEBUG_PRINTS
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());
   Serial.print("IP Address: ");
@@ -129,6 +130,7 @@ void printWifiStatus (void)
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+#endif
 }
 
 /******************************************************************
@@ -152,7 +154,9 @@ void connectToWiFi(void)
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE)
   {
+#ifdef WIFI_DEBUG_PRINTS
     Serial.println("Communication with WiFi module failed!");
+#endif
     // don't continue
     while (true);
   }
@@ -160,23 +164,33 @@ void connectToWiFi(void)
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION)
   {
+#ifdef WIFI_DEBUG_PRINTS
     Serial.println("Please upgrade the firmware");
+#endif
   }
 
   // attempt to connect to WiFi network:
+#ifdef WIFI_DEBUG_PRINTS
   Serial.print("WiFi Status: ");
   Serial.println(WiFi.status());
+#endif
   while(wifiStatus != WL_CONNECTED)
   {
+#ifdef WIFI_DEBUG_PRINTS
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
+#endif
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     wifiStatus = WiFi.begin(ssid, pass);
+#ifdef WIFI_DEBUG_PRINTS
     Serial.println("WiFi.begin");
+#endif
     do
     {
+#ifdef WIFI_DEBUG_PRINTS
       Serial.print("WiFi Status: ");
       Serial.println(WiFi.status());
+#endif
       delay(2000);
     } while(WiFi.status() != WL_CONNECTED);
   }
@@ -193,7 +207,9 @@ void INET_SetupAndSyncTime (void)
 {
   connectToWiFi();
   RTC.begin();
+#ifdef WIFI_DEBUG_PRINTS
   Serial.println("\nStarting connection to server...");
+#endif
   timeClient.begin();
   timeClient.update();
 
@@ -202,21 +218,27 @@ void INET_SetupAndSyncTime (void)
   // You may change the time zone offset to your local one.
   auto timeZoneOffsetHours = 1;
   auto unixTime = timeClient.getEpochTime() + (timeZoneOffsetHours * 3600);
+#ifdef WIFI_DEBUG_PRINTS
   Serial.print("Unix time = ");
   Serial.println(unixTime);
+#endif
   RTCTime timeToSet = RTCTime(unixTime);
   RTC.setTime(timeToSet);
 
   if (!RTC.setPeriodicCallback(periodicCallback_256thSec, Period::N256_TIMES_EVERY_SEC))
   {
     pinMode(led, OUTPUT);
+#ifdef WIFI_DEBUG_PRINTS
     Serial.println("ERROR: periodic callback not set");
+#endif
   }
 
   // Retrieve the date and time from the RTC and print them
   RTCTime currentTime;
   RTC.getTime(currentTime); 
+#ifdef WIFI_DEBUG_PRINTS
   Serial.println("The RTC was just set to: " + String(currentTime));
+#endif
 }
 
 /******************************************************************
@@ -268,6 +290,8 @@ bool RTC_IsNewSecond(void)
     isNewSecond_bool = true;
   }
   lastSecond_s16 = thisSecond_s16;
+
+  return isNewSecond_bool;
 }
 
 /******************************************************************
@@ -283,14 +307,18 @@ bool RTC_IsNewMinute(void)
   int16_t thisMinute_s16;
 
   RTC.getTime(timeNow);
-  thisMinute_s16 = timeNow.getSeconds();
+  thisMinute_s16 = timeNow.getMinutes();
 
   if(thisMinute_s16 != lastMinute_s16)
   {
     isNewMinute_bool = true;
   }
   lastMinute_s16 = thisMinute_s16;
+
+  return isNewMinute_bool;
 }
+
+
 
 /******************************************************************
 
@@ -299,7 +327,7 @@ bool RTC_IsNewMinute(void)
   Create a string of the current time
 
 ******************************************************************/
-void RTC_UpdateTimeDateString(char *TimeDateString)
+void RTC_getimeDateString(char *TimeDateString)
 {
   RTCTime timeNow;
   RTC.getTime(timeNow);
